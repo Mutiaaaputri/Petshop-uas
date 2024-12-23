@@ -1,0 +1,66 @@
+version: '2'
+
+services:
+  app:
+    build:
+      context: .
+    image: php:8.2.12-fpm
+    container_name: petshop
+    restart: unless-stopped
+    tty: true
+    environment:
+      SERVICE_NAME: app
+    working_dir: /var/www/petshop
+    volumes:
+      - .:/var/www/petshop_fix/
+      - ./storage/php.ini:/usr/local/etc/php/conf.d/local.ini
+    networks:
+      - petshop
+
+  webserver:
+    image: nginx:alpine
+    container_name: nginxpetshop
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "8089:80"
+    volumes:
+      - .:/var/www/petshop
+      - ./docker-compose/nginx:/etc/nginx/conf.d/
+    networks:
+      - petshop_fix
+
+  db:
+    image: mysql:5.7
+    container_name: dbpetshop
+    restart: always
+    tty: true
+    ports:
+      - "2022:3306"
+    volumes:
+      - lbdata:/var/lib/mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: tufamutia123
+      MYSQL_DATABASE: Laundry_app
+    networks:
+      - petshop_fix
+
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pmapetshop
+    links:
+      - db
+    restart: always
+    ports:
+      - "7000:80"
+    networks:
+      - petshop
+
+networks:
+  petshop_fix:
+    driver: bridge
+
+volumes:
+  lbdata:
+    driver: local
